@@ -121,12 +121,12 @@ def process(flag):
         if pose_landmarks is not None:
             # Get landmarks.
             frame_height, frame_width = output_frame.shape[0], output_frame.shape[1]
-            pose_landmarks = np.array([[lmk.x * frame_width, lmk.y * frame_height, lmk.z * frame_width]
-                                       for lmk in pose_landmarks.landmark], dtype=np.float32)
-            assert pose_landmarks.shape == (33, 3), 'Unexpected landmarks shape: {}'.format(pose_landmarks.shape)
+            pose_landmarks_array = np.array([[lmk.x * frame_width, lmk.y * frame_height, lmk.z * frame_width]
+                                             for lmk in pose_landmarks.landmark], dtype=np.float32)
+            assert pose_landmarks_array.shape == (33, 3), 'Unexpected landmarks shape: {}'.format(pose_landmarks_array.shape)
 
             # Classify the pose on the current frame.
-            pose_classification = pose_classifier(pose_landmarks)
+            pose_classification = pose_classifier(pose_landmarks_array)
 
             # Smooth classification using EMA.
             pose_classification_filtered = pose_classification_filter(pose_classification)

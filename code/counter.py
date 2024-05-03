@@ -48,26 +48,26 @@ class RepetitionCounter(object):
         right_wrist = pose_landmarks[15]
         wrist_over_shoulder = 0  # 手腕高度 - 肩膀高度
         visibility_threshold = 0.6  # 可见度阈值
-        if left_shoulder.visibility > visibility_threshold and left_wrist.visibility > visibility_threshold:
-            wrist_over_shoulder += left_shoulder.y - left_wrist.y
-        if right_shoulder.visibility > visibility_threshold and right_wrist.visibility > visibility_threshold:
-            wrist_over_shoulder += right_shoulder.y - right_wrist.y
+        if left_shoulder[3] > visibility_threshold and left_wrist[3] > visibility_threshold:
+            wrist_over_shoulder += left_shoulder[1] - left_wrist[1]
+        if right_shoulder[3] > visibility_threshold and right_wrist[3] > visibility_threshold:
+            wrist_over_shoulder += right_shoulder[1] - right_wrist[1]
 
         # 肩膀到胯部的距离（高度方向）
         left_hip = pose_landmarks[23]
         right_hip = pose_landmarks[24]
-        if left_shoulder.visibility > visibility_threshold and right_shoulder.visibility > visibility_threshold:
-            shoulder_y = (left_shoulder.y + right_shoulder.y) / 2
-        elif left_shoulder.visibility > visibility_threshold:
-            shoulder_y = left_shoulder.y
-        elif right_shoulder.visibility > visibility_threshold:
-            shoulder_y = right_shoulder.y
-        if left_hip.visibility > visibility_threshold and right_hip.visibility > visibility_threshold:
-            hip_y = (left_hip.y + right_hip.y) / 2
-        elif left_shoulder.visibility > visibility_threshold:
-            hip_y = left_hip.y
-        elif right_shoulder.visibility > visibility_threshold:
-            hip_y = right_hip.y
+        if left_shoulder[3] > visibility_threshold and right_shoulder[3] > visibility_threshold:
+            shoulder_y = (left_shoulder[1] + right_shoulder[1]) / 2
+        elif left_shoulder[3] > visibility_threshold:
+            shoulder_y = left_shoulder[1]
+        elif right_shoulder[3] > visibility_threshold:
+            shoulder_y = right_shoulder[1]
+        if left_hip[3] > visibility_threshold and right_hip[3] > visibility_threshold:
+            hip_y = (left_hip[1] + right_hip[1]) / 2
+        elif left_shoulder[3] > visibility_threshold:
+            hip_y = left_hip[1]
+        elif right_shoulder[3] > visibility_threshold:
+            hip_y = right_hip[1]
         shoulder_hip = hip_y - shoulder_y
 
         # 获取姿势的置信度.

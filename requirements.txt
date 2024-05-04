@@ -1,6 +1,6 @@
-matplotlib
-mediapipe
-numpy
+matplotlib==3.5.3
+mediapipe==0.9.0.1
+numpy==1.21.6
 opencv_contrib_python==4.7.0.72
 opencv_python==4.7.0.72
 Pillow==9.4.0

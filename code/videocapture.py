@@ -147,7 +147,7 @@ def process(flag):
 
             # Don't update the counter presuming that person is 'frozen'. Just
             # take the latest repetitions count.
-            repetitions_count = repetition_counter.n_repeats
+            repetitions_count = result['n_repeat']
 
         # Draw classification plot and repetition counter.
         output_frame = pose_classification_visualizer(
@@ -155,29 +155,6 @@ def process(flag):
             pose_classification=pose_classification,
             pose_classification_filtered=pose_classification_filtered,
             repetitions_count=repetitions_count)
-
-        if flag == 2:
-            # 提示手要抬水平
-            if not result['if_wrist_over_shoulder']:
-                output_img_draw = ImageDraw.Draw(output_frame)
-                text = "raise your arms"
-                position = (20, output_frame.size[1] - 100)
-                color = (255, 0, 0)
-                font_path = 'Roboto-Regular.ttf'  # 替换为你的字体文件路径
-                font_size = 72  # 设置字体大小
-                font = ImageFont.truetype(font_path, font_size)
-                output_img_draw.text(position, text, fill=color, font=font)
-
-            # 提示腰背挺直
-            if not result["if_straighten_back"]:
-                output_img_draw = ImageDraw.Draw(output_frame)
-                text = "straighten your back"
-                position = (20, output_frame.size[1] - 200)
-                color = (255, 0, 0)
-                font_path = 'Roboto-Regular.ttf'  # 替换为你的字体文件路径
-                font_size = 72  # 设置字体大小
-                font = ImageFont.truetype(font_path, font_size)
-                output_img_draw.text(position, text, fill=color, font=font)
 
         # 实时输出检测画面
         cv2.imshow('video', cv2.cvtColor(np.array(output_frame), cv2.COLOR_RGB2BGR))

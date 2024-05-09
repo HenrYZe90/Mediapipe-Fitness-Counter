@@ -147,7 +147,7 @@ def process(flag):
 
             # Don't update the counter presuming that person is 'frozen'. Just
             # take the latest repetitions count.
-            repetitions_count = result['n_repeat']
+            repetitions_count = repetition_counter.n_repeat
 
         # Draw classification plot and repetition counter.
         output_frame = pose_classification_visualizer(

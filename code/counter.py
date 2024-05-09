@@ -25,15 +25,21 @@ class RepetitionCounter(object):
         # 其他专家判断
         self._wrist_shoulder_angle_left = 0
         self._wrist_shoulder_angle_right = 0
+        self._knee_angle = 0
         self._shoulder_hip_height_ratio = 1
         self._shoulder_hip_height = 0.01
+        self._wrist_distance_ratio = 1
+        self._hands_visib = 1
 
         # 输出总结果
         self._result = {'n_repeat': self._n_repeats,
                         'finished': self._finished,
                         'wrist_shoulder_angle_left': self._wrist_shoulder_angle_left,
                         'wrist_shoulder_angle_right': self._wrist_shoulder_angle_right,
-                        'shoulder_hip_height_ratio': self._shoulder_hip_height_ratio}
+                        'knee_angle': self._knee_angle,
+                        'shoulder_hip_height_ratio': self._shoulder_hip_height_ratio,
+                        'wrist_distance_ratio': self._wrist_distance_ratio,
+                        'hands_visib': self._hands_visib}
 
     def __call__(self, pose_classification, pose_landmarks):
         # 计算给定帧之前发生的重复次数
@@ -53,7 +59,7 @@ class RepetitionCounter(object):
         right_shoulder = pose_landmarks[11]
         left_wrist = pose_landmarks[16]
         right_wrist = pose_landmarks[15]
-        visibility_threshold = 0.6  # 可见度阈值
+        visibility_threshold = 0.8  # 可见度阈值
         wrist_shoulder_angle_left = 0
         wrist_shoulder_angle_right = 0
         if left_shoulder[3] > visibility_threshold and left_wrist[3] > visibility_threshold:
@@ -70,8 +76,8 @@ class RepetitionCounter(object):
             wrist_shoulder_angle_right = np.degrees(angle_rad)
 
         # 肩膀到胯部的距离（高度方向）
-        left_hip = pose_landmarks[23]
-        right_hip = pose_landmarks[24]
+        left_hip = pose_landmarks[24]
+        right_hip = pose_landmarks[23]
         if left_shoulder[3] > visibility_threshold and right_shoulder[3] > visibility_threshold:
             shoulder_y = (left_shoulder[1] + right_shoulder[1]) / 2
         elif left_shoulder[3] > visibility_threshold:
@@ -86,6 +92,42 @@ class RepetitionCounter(object):
             hip_y = right_hip[1]
         shoulder_hip_height = hip_y - shoulder_y
 
+        # 提膝角度
+        left_knee = pose_landmarks[26]
+        right_knee = pose_landmarks[25]
+        knee_angle_left = 0
+        knee_angle_right = 0
+        if left_hip[3] > visibility_threshold and left_knee[3] > visibility_threshold:
+            vector = left_knee[:3] - left_hip[:3]
+            cos_angle = np.dot(vector, np.array([0, 1, 0])) / (np.linalg.norm(vector))
+            # 使用arccos计算角度，并将结果转换为度
+            angle_rad = np.arccos(cos_angle)
+            knee_angle_left = np.degrees(angle_rad)
+        if right_hip[3] > visibility_threshold and right_knee[3] > visibility_threshold:
+            vector = right_knee[:3] - right_hip[:3]
+            cos_angle = np.dot(vector, np.array([0, 1, 0])) / (np.linalg.norm(vector))
+            # 使用arccos计算角度，并将结果转换为度
+            angle_rad = np.arccos(cos_angle)
+            knee_angle_right = np.degrees(angle_rad)
+        knee_angle = max(knee_angle_left, knee_angle_right)
+
+        # 两手最近距离（与双肩距离的比例）
+        wrist_distance_ratio = 1
+        if left_shoulder[3] > visibility_threshold and right_shoulder[3] > visibility_threshold and left_wrist[3] > visibility_threshold and right_wrist[3] > visibility_threshold:
+            vector = left_shoulder[:3] - right_shoulder[:3]
+            hip_distance = np.linalg.norm(vector)
+            vector = left_wrist[:3] - right_wrist[:3]
+            wrist_distance = np.linalg.norm(vector)
+            wrist_distance_ratio = wrist_distance / hip_distance
+
+        # 手的可见性
+        hands_visib = 0
+        for i in range(15, 23):
+            if pose_landmarks[i][3] > visibility_threshold:
+                hands_visib += 1
+        hands_visib /= 8
+        print("hands visibility:", hands_visib)
+
         # 获取姿势的置信度.
         pose_confidence = 0.0
         if self._class_name in pose_classification:
@@ -99,8 +141,11 @@ class RepetitionCounter(object):
             if self._pose_entered:  # 初始化
                 self._wrist_shoulder_angle_left = 0
                 self._wrist_shoulder_angle_right = 0
+                self._knee_angle = 0
                 self._shoulder_hip_height_ratio = 1
                 self._shoulder_hip_height = 0.01
+                self._wrist_distance_ratio = 1
+                self._hands_visib = 1
                 self._finished = True
 
         if self._pose_entered:
@@ -136,13 +181,26 @@ class RepetitionCounter(object):
             shoulder_hip_height_ratio = shoulder_hip_height / self._shoulder_hip_height
             if shoulder_hip_height_ratio < self._shoulder_hip_height_ratio:
                 self._shoulder_hip_height_ratio = shoulder_hip_height_ratio
+            if knee_angle > self._knee_angle:
+                self._knee_angle = knee_angle
+            if wrist_distance_ratio < self._wrist_distance_ratio:
+                self._wrist_distance_ratio = wrist_distance_ratio
+            if hands_visib < self._hands_visib:
+                self._hands_visib = hands_visib
 
         if self._flag == 2:  # flag = 2 提膝击掌
             # 更新结果
             self._result['n_repeat'] = self._n_repeats
             self._result['finished'] = self._finished
+            # 指标1
             self._result['wrist_shoulder_angle_left'] = self._wrist_shoulder_angle_left
             self._result['wrist_shoulder_angle_right'] = self._wrist_shoulder_angle_right
+            # 指标2
+            self._result['knee_angle'] = self._knee_angle
+            # 指标3
             self._result['shoulder_hip_height_ratio'] = self._shoulder_hip_height_ratio
+            # 指标4
+            self._result['wrist_distance_ratio'] = self._wrist_distance_ratio
+            self._result['hands_visib'] = self._hands_visib
 
         return self._result

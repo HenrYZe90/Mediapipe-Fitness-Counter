@@ -23,13 +23,14 @@ class RepetitionCounter(object):
         self._finished = True
 
         # 其他专家判断
-        self._wrist_shoulder_angle_left = 0
-        self._wrist_shoulder_angle_right = 0
-        self._knee_angle = 0
-        self._shoulder_hip_height_ratio = 1
+        self._wrist_shoulder_angle_left = 0.0
+        self._wrist_shoulder_angle_right = 0.0
+        self._knee_angle = 0.0
+        self._shoulder_hip_height_ratio = 1.0
         self._shoulder_hip_height = 0.01
-        self._wrist_distance_ratio = 1
-        self._hands_visib = 1
+        self._wrist_distance_ratio = 1.0
+        self._hands_visib_left = 1.0
+        self._hands_visib_right = 1.0
 
         # 输出总结果
         self._result = {'n_repeat': self._n_repeats,
@@ -39,7 +40,8 @@ class RepetitionCounter(object):
                         'knee_angle': self._knee_angle,
                         'shoulder_hip_height_ratio': self._shoulder_hip_height_ratio,
                         'wrist_distance_ratio': self._wrist_distance_ratio,
-                        'hands_visib': self._hands_visib}
+                        'hands_visib_left': self._hands_visib_left,
+                        'hands_visib_right': self._hands_visib_right}
 
     def __call__(self, pose_classification, pose_landmarks):
         # 计算给定帧之前发生的重复次数
@@ -121,12 +123,11 @@ class RepetitionCounter(object):
             wrist_distance_ratio = wrist_distance / hip_distance
 
         # 手的可见性
-        hands_visib = 0
-        for i in range(15, 23):
-            if pose_landmarks[i][3] > visibility_threshold:
-                hands_visib += 1
-        hands_visib /= 8
-        print("hands visibility:", hands_visib)
+        hands_visib_left = pose_landmarks[16][3] + pose_landmarks[18][3] + pose_landmarks[20][3] + pose_landmarks[22][3]
+        hands_visib_left /= 4
+        hands_visib_right = pose_landmarks[15][3] + pose_landmarks[17][3] + pose_landmarks[19][3] + pose_landmarks[21][3]
+        hands_visib_right /= 4
+        print("hands visibility:", hands_visib_left, hands_visib_right)
 
         # 获取姿势的置信度.
         pose_confidence = 0.0
@@ -139,13 +140,14 @@ class RepetitionCounter(object):
         if not self._pose_entered:
             self._pose_entered = pose_confidence > self._enter_threshold
             if self._pose_entered:  # 初始化
-                self._wrist_shoulder_angle_left = 0
-                self._wrist_shoulder_angle_right = 0
-                self._knee_angle = 0
-                self._shoulder_hip_height_ratio = 1
+                self._wrist_shoulder_angle_left = 0.0
+                self._wrist_shoulder_angle_right = 0.0
+                self._knee_angle = 0.0
+                self._shoulder_hip_height_ratio = 1.0
                 self._shoulder_hip_height = 0.01
-                self._wrist_distance_ratio = 1
-                self._hands_visib = 1
+                self._wrist_distance_ratio = 1.0
+                self._hands_visib_left = 1.0
+                self._hands_visib_right = 1.0
                 self._finished = True
 
         if self._pose_entered:
@@ -185,8 +187,10 @@ class RepetitionCounter(object):
                 self._knee_angle = knee_angle
             if wrist_distance_ratio < self._wrist_distance_ratio:
                 self._wrist_distance_ratio = wrist_distance_ratio
-            if hands_visib < self._hands_visib:
-                self._hands_visib = hands_visib
+            if hands_visib_left < self._hands_visib_left:
+                self._hands_visib_left = hands_visib_left
+            if hands_visib_right < self._hands_visib_right:
+                self._hands_visib_right = hands_visib_right
 
         if self._flag == 2:  # flag = 2 提膝击掌
             # 更新结果
@@ -201,6 +205,7 @@ class RepetitionCounter(object):
             self._result['shoulder_hip_height_ratio'] = self._shoulder_hip_height_ratio
             # 指标4
             self._result['wrist_distance_ratio'] = self._wrist_distance_ratio
-            self._result['hands_visib'] = self._hands_visib
+            self._result['hands_visib_left'] = self._hands_visib_left
+            self._result['hands_visib_right'] = self._hands_visib_right
 
         return self._result

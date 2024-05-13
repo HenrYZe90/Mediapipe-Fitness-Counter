@@ -52,14 +52,18 @@ def process(flag):
     # building classifier to output CSVs.
     pose_samples_folder = 'fitness_poses_csvs_out'
 
+    # 初始化，准备工作只做一次
     # Initialize tracker.
+    # 得到关键点
     pose_tracker = mp_pose.Pose()
 
     # Initialize embedder.
+    # 得到表示肢体动作的向量
     pose_embedder = pe.FullBodyPoseEmbedder()
 
     # Initialize classifier.
     # Check that you are using the same parameters as during bootstrapping.
+    # 动作分类 动作A:2, 动作B:8 ...
     pose_classifier = pc.PoseClassifier(
         pose_samples_folder=pose_samples_folder,
         # class_name=class_name,
@@ -72,11 +76,13 @@ def process(flag):
     # print('Number of pose sample outliers (consider removing them): ', len(outliers))
 
     # Initialize EMA smoothing.
+    # 平滑处理，过滤掉动作识别的毛刺
     pose_classification_filter = rs.EMADictSmoothing(
         window_size=2,
         alpha=0.2)
 
     # Initialize counter.
+    # 计数+判断动作标准
     repetition_counter = counter.RepetitionCounter(
         flag=flag,
         class_name=class_name)
@@ -93,6 +99,7 @@ def process(flag):
     # Open output video.
     # out_video = cv2.VideoWriter(out_video_path, cv2.VideoWriter_fourcc(*'mp4v'), video_fps, (video_width, video_height))
 
+    # 一帧一帧的处理
     # frame_idx = 0
     output_frame = None
     # with tqdm.tqdm(total=video_n_frames, position=0, leave=True) as pbar:
@@ -105,10 +112,8 @@ def process(flag):
         # Run pose tracker.
         input_frame = cv2.cvtColor(input_frame, cv2.COLOR_BGR2RGB)
         result = pose_tracker.process(image=input_frame)
+        # 得到了骨骼点坐标
         pose_landmarks = result.pose_landmarks
-
-        # if pose_landmarks != None:
-        #     print(len([x.visibility for x in pose_landmarks.landmark if x.visibility > 0.9]))
 
         # Draw pose prediction.
         output_frame = input_frame.copy()

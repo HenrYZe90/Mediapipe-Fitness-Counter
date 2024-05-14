@@ -44,16 +44,16 @@ def process(flag, pose_landmarks, counter_result):
         class_name=class_name,
         prev_result=counter_result)
 
+    pose_landmarks = np.array(pose_landmarks)
     if pose_landmarks is not None:
         # Get landmarks.
         assert pose_landmarks.shape == (33, 4), 'Unexpected landmarks shape: {}'.format(pose_landmarks.shape)
 
         # Classify the pose on the current frame.
         pose_classification = pose_classifier(pose_landmarks[:, :3])
-        print('完成时间 ', datetime.datetime.now())
-        print('动作分类 ', pose_classification)
 
         # Count repetitions.
         counter_result = repetition_counter(pose_classification, pose_landmarks)
-        print('输出结果 ', counter_result)
+
+    return counter_result
 

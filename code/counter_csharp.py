@@ -1,5 +1,5 @@
 import copy
-
+import csv
 import numpy as np
 
 
@@ -25,8 +25,8 @@ class RepetitionCounter(object):
         self._wrist_shoulder_angle_left = 0.0
         self._wrist_shoulder_angle_right = 0.0
         self._knee_angle = 0.0
+        self._shoulder_hip_height_standard = 0.01
         self._shoulder_hip_height_ratio = 1.0
-        self._shoulder_hip_height = 0.01
         self._wrist_distance_ratio = 1.0
         self._hands_visib_left = 1.0
         self._hands_visib_right = 1.0
@@ -38,6 +38,7 @@ class RepetitionCounter(object):
                         'wrist_shoulder_angle_left': self._wrist_shoulder_angle_left,
                         'wrist_shoulder_angle_right': self._wrist_shoulder_angle_right,
                         'knee_angle': self._knee_angle,
+                        'shoulder_hip_height_standard': self._shoulder_hip_height_standard,
                         'shoulder_hip_height_ratio': self._shoulder_hip_height_ratio,
                         'wrist_distance_ratio': self._wrist_distance_ratio,
                         'hands_visib_left': self._hands_visib_left,
@@ -51,6 +52,7 @@ class RepetitionCounter(object):
             self._wrist_shoulder_angle_left = self._result['wrist_shoulder_angle_left']
             self._wrist_shoulder_angle_right = self._result['wrist_shoulder_angle_right']
             self._knee_angle = self._result['knee_angle']
+            self._shoulder_hip_height_standard = self._result['shoulder_hip_height_standard']
             self._shoulder_hip_height_ratio = self._result['shoulder_hip_height_ratio']
             self._wrist_distance_ratio = self._result['wrist_distance_ratio']
             self._hands_visib_left = self._result['hands_visib_left']
@@ -97,6 +99,9 @@ class RepetitionCounter(object):
         # 肩膀到胯部的距离（高度方向）
         left_hip = pose_landmarks[24]
         right_hip = pose_landmarks[23]
+        hip_y = 0
+        shoulder_y = 0
+        shoulder_hip_height = 0.01
         if left_shoulder[3] > visibility_threshold and right_shoulder[3] > visibility_threshold:
             shoulder_y = (left_shoulder[1] + right_shoulder[1]) / 2
         elif left_shoulder[3] > visibility_threshold:
@@ -105,11 +110,12 @@ class RepetitionCounter(object):
             shoulder_y = right_shoulder[1]
         if left_hip[3] > visibility_threshold and right_hip[3] > visibility_threshold:
             hip_y = (left_hip[1] + right_hip[1]) / 2
-        elif left_shoulder[3] > visibility_threshold:
+        elif left_hip[3] > visibility_threshold:
             hip_y = left_hip[1]
-        elif right_shoulder[3] > visibility_threshold:
+        elif right_hip[3] > visibility_threshold:
             hip_y = right_hip[1]
-        shoulder_hip_height = hip_y - shoulder_y
+        if hip_y != 0 and shoulder_y != 0:
+            shoulder_hip_height = hip_y - shoulder_y
 
         # 提膝角度
         left_knee = pose_landmarks[26]
@@ -161,15 +167,15 @@ class RepetitionCounter(object):
                 self._wrist_shoulder_angle_right = 0.0
                 self._knee_angle = 0.0
                 self._shoulder_hip_height_ratio = 1.0
-                self._shoulder_hip_height = 0.01
+                self._shoulder_hip_height_standard = 0.01
                 self._wrist_distance_ratio = 1.0
                 self._hands_visib_left = 1.0
                 self._hands_visib_right = 1.0
                 self._finished = True
 
         if self._pose_entered:
-            if self._shoulder_hip_height < shoulder_hip_height:
-                self._shoulder_hip_height = shoulder_hip_height  # 设定基准背部高度，更新为捕捉到的最大值
+            if self._shoulder_hip_height_standard < shoulder_hip_height:
+                self._shoulder_hip_height_standard = shoulder_hip_height  # 设定基准背部高度，更新为捕捉到的最大值
             if self._wrist_shoulder_angle_left < wrist_shoulder_angle_left:
                 self._wrist_shoulder_angle_left = wrist_shoulder_angle_left  # 更新为最大的角度
             if self._wrist_shoulder_angle_right < wrist_shoulder_angle_right:
@@ -197,7 +203,7 @@ class RepetitionCounter(object):
                     self._finished = False
 
         if not self._finished and self._flag == 2:
-            shoulder_hip_height_ratio = shoulder_hip_height / self._shoulder_hip_height
+            shoulder_hip_height_ratio = shoulder_hip_height / self._shoulder_hip_height_standard
             if shoulder_hip_height_ratio < self._shoulder_hip_height_ratio:
                 self._shoulder_hip_height_ratio = shoulder_hip_height_ratio
             if knee_angle > self._knee_angle:
@@ -220,10 +226,35 @@ class RepetitionCounter(object):
             # 指标2
             self._result['knee_angle'] = self._knee_angle
             # 指标3
+            self._result['shoulder_hip_height_standard'] = self._shoulder_hip_height_standard
             self._result['shoulder_hip_height_ratio'] = self._shoulder_hip_height_ratio
             # 指标4
             self._result['wrist_distance_ratio'] = self._wrist_distance_ratio
             self._result['hands_visib_left'] = self._hands_visib_left
             self._result['hands_visib_right'] = self._hands_visib_right
+
+        # csv_file_path = 'results.csv'
+        # # 使用'w'模式打开CSV文件，如果文件已存在则会被覆盖
+        # # 如果你想在现有文件上追加数据，可以使用'a'模式
+        # with open(csv_file_path, mode='a', newline='') as csv_file:
+        #     writer = csv.writer(csv_file)
+        #     writer.writerow([self._n_repeats,
+        #                      self._pose_entered,
+        #                      self._finished,
+        #                      wrist_shoulder_angle_left,
+        #                      self._wrist_shoulder_angle_left,
+        #                      wrist_shoulder_angle_right,
+        #                      self._wrist_shoulder_angle_right,
+        #                      knee_angle_left,
+        #                      knee_angle_right,
+        #                      self._knee_angle,
+        #                      shoulder_hip_height,
+        #                      self._shoulder_hip_height_standard,
+        #                      self._shoulder_hip_height_ratio,
+        #                      self._wrist_distance_ratio,
+        #                      hands_visib_left,
+        #                      self._hands_visib_left,
+        #                      hands_visib_right,
+        #                      self._hands_visib_right])
 
         return self._result

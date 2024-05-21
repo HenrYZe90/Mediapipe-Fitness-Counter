@@ -2,10 +2,9 @@
 class EMADictSmoothing(object):
     """平滑姿势分类。"""
 
-    def __init__(self, window_size=10, alpha=0.2):
+    def __init__(self, window_size=10, alpha=0.5):
         self._window_size = window_size
         self._alpha = alpha
-
         self._data_in_window = []
 
     def __call__(self, data):
@@ -53,4 +52,3 @@ class EMADictSmoothing(object):
             smoothed_data[key] = top_sum / bottom_sum
 
         return smoothed_data
-

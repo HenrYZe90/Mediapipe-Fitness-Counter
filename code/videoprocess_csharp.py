@@ -12,6 +12,8 @@ import resultsmooth as rs  # 分类结果平滑
 import counter_csharp  # 动作计数器
 import visualizer as vs  # 可视化模块
 from PIL import ImageDraw, ImageFont
+import time
+import logging
 
 
 def show_image(img, figsize=(10, 10)):
@@ -35,6 +37,10 @@ def video_process(video_path, flag):
     elif flag == 2:
         class_name = 'HighKnees_prepare'
         out_video_path = './video-output/' + class_name.split('_')[0] + ' ' + mkfile_time + '.mp4'
+
+    # 配置logging模块
+    logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s:%(levelname)s:%(message)s')
+    logging.info('0 - start counting...')
 
     # Open the video.
     video_cap = cv2.VideoCapture(video_path)
@@ -61,9 +67,13 @@ def video_process(video_path, flag):
         if not success:
             break
 
+        start_time = time.time()
         # Initialize embedder.
         pose_embedder = pe.FullBodyPoseEmbedder()
+        print(f"耗时分析 embedder 初始化 {time.time() - start_time} sec.")
+        logging.info('1 - pose embedder initialized')
 
+        start_time = time.time()
         # Initialize classifier.
         # Check that you are using the same parameters as during bootstrapping.
         pose_classifier = pc.PoseClassifier(
@@ -71,21 +81,30 @@ def video_process(video_path, flag):
             pose_embedder=pose_embedder,
             top_n_by_max_distance=30,
             top_n_by_mean_distance=10)
+        print(f"耗时分析 classifier 初始化 {time.time() - start_time} sec.")
+        logging.info('2 - pose classifier initialized')
 
+        start_time = time.time()
         # Initialize counter.
         repetition_counter = counter_csharp.RepetitionCounter(
             flag=flag,
             class_name=class_name,
             prev_result=counter_result)
+        print(f"耗时分析 counter 初始化 {time.time() - start_time} sec.")
+        logging.info('3 - repetition counter initialized')
 
+        start_time = time.time()
         # Run pose tracker.
         input_frame = cv2.cvtColor(input_frame, cv2.COLOR_BGR2RGB)
         result = pose_tracker.process(image=input_frame)
         pose_landmarks = result.pose_landmarks
+        print(f"耗时分析 获取肢体关键点 {time.time() - start_time} sec.")
+        logging.info('4 - pose landmarks to numpy array done')
 
         if pose_landmarks is None:
             continue
 
+        start_time = time.time()
         if pose_landmarks is not None:
             # Get landmarks.
             frame_height, frame_width = input_frame.shape[0], input_frame.shape[1]
@@ -95,9 +114,14 @@ def video_process(video_path, flag):
 
             # Classify the pose on the current frame.
             pose_classification = pose_classifier(pose_landmarks[:, :3])
-            print('完成时间 ', datetime.datetime.now())
-            print('动作分类 ', pose_classification)
+            # print('完成时间 ', datetime.datetime.now())
+            # print('动作分类 ', pose_classification)
+            logging.info('5 - pose classification done')
 
             # Count repetitions.
             counter_result = repetition_counter(pose_classification, pose_landmarks)
-            print('输出结果 ', counter_result)
+            # print('输出结果 ', counter_result)
+            logging.info('6 - returned result')
+
+        # print(f"耗时分析 计算结果 {time.time() - start_time} sec.")
+        # print()

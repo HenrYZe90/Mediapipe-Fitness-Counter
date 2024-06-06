@@ -35,6 +35,9 @@ def video_process(video_path, flag):
     elif flag == 2:
         class_name = 'HighKnees_prepare'
         out_video_path = './video-output/' + class_name.split('_')[0] + ' ' + mkfile_time + '.mp4'
+    elif flag == 3:
+        class_name = 'SkippingRope_lowest'
+        out_video_path = './video-output/' + class_name.split('_')[0] + ' ' + mkfile_time + '.mp4'
 
     # Open the video.
     video_cap = cv2.VideoCapture(video_path)
@@ -72,13 +75,14 @@ def video_process(video_path, flag):
 
     # Initialize EMA smoothing.
     pose_classification_filter = rs.EMADictSmoothing(
-        window_size=10,
-        alpha=0.2)
+        window_size=1,
+        alpha=0.3)
 
     # Initialize counter.
     repetition_counter = counter.RepetitionCounter(
         flag=flag,
-        class_name=class_name)
+        enter_threshold=8,
+        exit_threshold=2)
 
     # Initialize renderer.
     pose_classification_visualizer = vs.PoseClassificationVisualizer(
@@ -133,13 +137,13 @@ def video_process(video_path, flag):
 
                 # Smooth classification using EMA.
                 pose_classification_filtered = pose_classification_filter(pose_classification)
-                print(datetime.datetime.now())
-                print(pose_classification_filtered)
+                # print(datetime.datetime.now(), pose_classification_filtered)
 
                 # Count repetitions.
                 result = repetition_counter(pose_classification_filtered, pose_landmarks)
-                print(result)
-                repetitions_count = result['n_repeat']
+                # print(result)
+                # repetitions_count = result['n_repeat']
+                repetitions_count = repetition_counter.n_repeats
 
             else:
                 # No pose => no classification on current frame.
@@ -163,9 +167,12 @@ def video_process(video_path, flag):
 
             # Save the output frame.
             out_video.write(cv2.cvtColor(np.array(output_frame), cv2.COLOR_RGB2BGR))
-
             frame_idx += 1
             pbar.update()
+
+            # import time
+            # current_time = time.time() * 1000
+            # cv2.imwrite(os.path.join('output', f'{current_time}.jpg'), np.array(output_frame))
 
     # Close output video.
     out_video.release()

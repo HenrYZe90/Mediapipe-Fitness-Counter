@@ -21,12 +21,18 @@ import os
 def trainset_process(flag):
     # 如果fitness_poses_csvs_out文件夹下的PushUp_up.csv和PushUp_down.csv已经存在，则不用导入样本图片再训练了
     if flag == 1:
-        if os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out\PushUp_up.csv')) and os.path.isfile(
-                os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out\PushUp_down.csv')):
+        if os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/PushUp_up.csv')) and \
+                os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/PushUp_down.csv')):
             return
     elif flag == 2:
-        if os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out\HighKnees_left.csv')) and os.path.isfile(
-                os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out\HighKnees_right.csv')):
+        if os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/HighKnees_prepare.csv')) and \
+                os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/HighKnees_left.csv')) and \
+                os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/HighKnees_right.csv')):
+            return
+
+    elif flag == 3:
+        if os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/SkippingRope_highest.csv')) and \
+                os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/SkippingRope_lowest.csv')):
             return
 
     # 指定样本图片的路径
@@ -104,6 +110,7 @@ def trainset_process(flag):
     bootstrap_helper.align_images_and_csvs(print_removed_items=False)
     bootstrap_helper.print_images_out_statistics()
 
+
 # def dump_for_the_app():
 #     pose_samples_folder = 'fitness_poses_csvs_out'
 #     pose_samples_csv_path = 'fitness_poses_csvs_out.csv'
@@ -127,3 +134,7 @@ def trainset_process(flag):
 #                     csv_out_writer.writerow(row)
 
 # dump_for_the_app()
+
+if __name__ == '__main__':
+    flag = 3
+    trainset_process(flag)  # 训练新的图片/动作/姿态

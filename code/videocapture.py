@@ -32,10 +32,10 @@ def process(flag):
     # out_video_path = 'squat-sample-out.mp4'
     if flag == 1:
         class_name = 'DeepSquat_down'
-        out_video_path = './video-output/' + class_name.split('_')[0] + ' ' + mkfile_time + '.mp4'
     elif flag == 2:
         class_name = 'HighKnees_prepare'
-        out_video_path = './video-output/' + class_name.split('_')[0] + ' ' + mkfile_time + '.mp4'
+    elif flag == 3:
+        class_name = 'SkippingRope_lowest'
     cv2.namedWindow('video', cv2.WINDOW_NORMAL)
     video_cap = cv2.VideoCapture(0)
 

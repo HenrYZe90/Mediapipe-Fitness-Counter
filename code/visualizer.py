@@ -23,7 +23,7 @@ class PoseClassificationVisualizer(object):
                  counter_location_y=0.05,
                  #                counter_font_path='https://github.com/googlefonts/roboto/blob/main/src/hinted/Roboto-Regular.ttf?raw=true',
                  counter_font_color='red',
-                 counter_font_size=0.1):
+                 counter_font_size=0.05):
         self._class_name = class_name
         self._plot_location_x = plot_location_x
         self._plot_location_y = plot_location_y

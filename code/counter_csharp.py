@@ -1,5 +1,3 @@
-import copy
-import csv
 import numpy as np
 
 
@@ -52,6 +50,30 @@ class RepetitionCounter(object):
                             'wrist_distance_ratio': self._wrist_distance_ratio,
                             'hands_visib_left': self._hands_visib_left,
                             'hands_visib_right': self._hands_visib_right}
+
+        elif flag == 3:  # 跳绳
+            self._flag = flag
+            # 退出姿势的次数
+            self._n_repeats = 0
+            # 是否处于准备姿势
+            self._pose_highest_entered = False
+            self._pose_lowest_entered = False
+            # 其他专家判断
+            self._hip_height_array = []
+            self._window_len = 11
+            self._hip_height_array2 = []
+            self._window_len2 = 100
+            self._shoulder_hip_height = 0
+            self._hip_height_highest = 0
+            self._hip_height_lowest = 0
+            self._result = {'n_repeat': self._n_repeats,
+                            'hip_height_array': self._hip_height_array,
+                            'pose_highest_entered': self._pose_highest_entered,
+                            'pose_lowest_entered': self._pose_lowest_entered}
+
+    @property
+    def n_repeats(self):
+        return self._n_repeats
 
     def __call__(self, pose_classification, pose_landmarks):
 
@@ -251,5 +273,64 @@ class RepetitionCounter(object):
             #                      self._hands_visib_left,
             #                      hands_visib_right,
             #                      self._hands_visib_right])
+
+        elif self._flag == 3:  # 跳绳
+
+            # 胯部的高度
+            left_hip = pose_landmarks[24]
+            right_hip = pose_landmarks[23]
+            hip_y = 0
+            visibility_threshold = 0.8  # 可见度阈值
+            if left_hip[3] > visibility_threshold and right_hip[3] > visibility_threshold:
+                hip_y = (left_hip[1] + right_hip[1]) / 2
+            elif left_hip[3] > visibility_threshold:
+                hip_y = left_hip[1]
+            elif right_hip[3] > visibility_threshold:
+                hip_y = right_hip[1]
+            if hip_y != 0:
+                self._hip_height_array.append(hip_y)
+            if len(self._hip_height_array) > self._window_len:
+                self._hip_height_array.pop(0)
+            if hip_y != 0:
+                self._hip_height_array2.append(hip_y)
+            if len(self._hip_height_array2) > self._window_len2:
+                self._hip_height_array2.pop(0)
+
+            # 肩膀高度
+            shoulder_y = 0
+            left_shoulder = pose_landmarks[12]
+            right_shoulder = pose_landmarks[11]
+            if left_shoulder[3] > visibility_threshold and right_shoulder[3] > visibility_threshold:
+                shoulder_y = (left_shoulder[1] + right_shoulder[1]) / 2
+            elif left_shoulder[3] > visibility_threshold:
+                shoulder_y = left_shoulder[1]
+            elif right_shoulder[3] > visibility_threshold:
+                shoulder_y = right_shoulder[1]
+            if hip_y != 0 and shoulder_y != 0:
+                self._shoulder_hip_height = hip_y - shoulder_y
+
+            mid_index = int((self._window_len - 1) / 2)
+            arr = np.array(self._hip_height_array)
+            # 找到最大值的索引
+            max_index = np.argmax(arr)
+            # 找到最小值的索引
+            min_index = np.argmin(arr)
+            if min_index == mid_index:
+                self._pose_highest_entered = True
+                self._pose_lowest_entered = False
+                self._hip_height_highest = self._hip_height_array[mid_index]
+                if (self._hip_height_lowest - self._hip_height_highest > 1 / 8 * self._shoulder_hip_height):
+                    self._n_repeats += 1
+                self._highest_to_lowest = 0
+                self._lowest_to_highest = 0
+            if max_index == mid_index:
+                self._pose_lowest_entered = True
+                self._pose_highest_entered = False
+                self._hip_height_lowest = self._hip_height_array[mid_index]
+
+            self._result['n_repeat'] = self._n_repeats
+            self._result['hip_height_array'] = self._hip_height_array
+            self._result['pose_highest_entered'] = self._pose_highest_entered
+            self._result['pose_lowest_entered'] = self._pose_lowest_entered
 
         return self._result

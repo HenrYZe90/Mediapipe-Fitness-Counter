@@ -61,11 +61,10 @@ class RepetitionCounter(object):
             # 其他专家判断
             self._hip_height_array = []
             self._window_len = 11
-            self._hip_height_array2 = []
-            self._window_len2 = 100
             self._shoulder_hip_height = 0
             self._hip_height_highest = 0
             self._hip_height_lowest = 0
+            self._ratio_thres = 1 / 15
             self._result = {'n_repeat': self._n_repeats,
                             'hip_height_array': self._hip_height_array,
                             'pose_highest_entered': self._pose_highest_entered,
@@ -291,10 +290,6 @@ class RepetitionCounter(object):
                 self._hip_height_array.append(hip_y)
             if len(self._hip_height_array) > self._window_len:
                 self._hip_height_array.pop(0)
-            if hip_y != 0:
-                self._hip_height_array2.append(hip_y)
-            if len(self._hip_height_array2) > self._window_len2:
-                self._hip_height_array2.pop(0)
 
             # 肩膀高度
             shoulder_y = 0
@@ -311,22 +306,23 @@ class RepetitionCounter(object):
 
             mid_index = int((self._window_len - 1) / 2)
             arr = np.array(self._hip_height_array)
-            # 找到最大值的索引
-            max_index = np.argmax(arr)
-            # 找到最小值的索引
-            min_index = np.argmin(arr)
-            if min_index == mid_index:
-                self._pose_highest_entered = True
-                self._pose_lowest_entered = False
-                self._hip_height_highest = self._hip_height_array[mid_index]
-                if (self._hip_height_lowest - self._hip_height_highest > 1 / 8 * self._shoulder_hip_height):
-                    self._n_repeats += 1
-                self._highest_to_lowest = 0
-                self._lowest_to_highest = 0
-            if max_index == mid_index:
-                self._pose_lowest_entered = True
-                self._pose_highest_entered = False
-                self._hip_height_lowest = self._hip_height_array[mid_index]
+            if len(arr) > 0:
+                # 找到最大值的索引
+                max_index = np.argmax(arr)
+                # 找到最小值的索引
+                min_index = np.argmin(arr)
+                if min_index == mid_index:
+                    self._pose_highest_entered = True
+                    self._pose_lowest_entered = False
+                    self._hip_height_highest = self._hip_height_array[mid_index]
+                    if (self._hip_height_lowest - self._hip_height_highest > self._ratio_thres * self._shoulder_hip_height):
+                        self._n_repeats += 1
+                    self._highest_to_lowest = 0
+                    self._lowest_to_highest = 0
+                if max_index == mid_index:
+                    self._pose_lowest_entered = True
+                    self._pose_highest_entered = False
+                    self._hip_height_lowest = self._hip_height_array[mid_index]
 
             self._result['n_repeat'] = self._n_repeats
             self._result['hip_height_array'] = self._hip_height_array

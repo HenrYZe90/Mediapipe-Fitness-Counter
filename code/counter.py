@@ -1,5 +1,3 @@
-import os.path
-
 import numpy as np
 
 
@@ -64,11 +62,10 @@ class RepetitionCounter(object):
             # 其他专家判断
             self._hip_height_array = []
             self._window_len = 11
-            self._hip_height_array2 = []
-            self._window_len2 = 100
             self._shoulder_hip_height = 0
             self._hip_height_highest = 0
             self._hip_height_lowest = 0
+            self._ratio_thres = 1 / 8
             self._result = {'n_repeat': self._n_repeats,
                             'hip_height_array': self._hip_height_array,
                             'pose_highest_entered': self._pose_highest_entered,
@@ -167,8 +164,7 @@ class RepetitionCounter(object):
 
             # 两手最近距离（与双肩距离的比例）
             wrist_distance_ratio = 1
-            if left_shoulder[3] > visibility_threshold and right_shoulder[3] > visibility_threshold and left_wrist[
-                3] > visibility_threshold and right_wrist[3] > visibility_threshold:
+            if left_shoulder[3] > visibility_threshold and right_shoulder[3] > visibility_threshold and left_wrist[3] > visibility_threshold and right_wrist[3] > visibility_threshold:
                 vector = left_shoulder[:3] - right_shoulder[:3]
                 hip_distance = np.linalg.norm(vector)
                 vector = left_wrist[:3] - right_wrist[:3]
@@ -176,11 +172,9 @@ class RepetitionCounter(object):
                 wrist_distance_ratio = wrist_distance / hip_distance
 
             # 手的可见性
-            hands_visib_left = pose_landmarks[16][3] + pose_landmarks[18][3] + pose_landmarks[20][3] + \
-                               pose_landmarks[22][3]
+            hands_visib_left = pose_landmarks[16][3] + pose_landmarks[18][3] + pose_landmarks[20][3] + pose_landmarks[22][3]
             hands_visib_left /= 4
-            hands_visib_right = pose_landmarks[15][3] + pose_landmarks[17][3] + pose_landmarks[19][3] + \
-                                pose_landmarks[21][3]
+            hands_visib_right = pose_landmarks[15][3] + pose_landmarks[17][3] + pose_landmarks[19][3] + pose_landmarks[21][3]
             hands_visib_right /= 4
             # print("hands visibility:", hands_visib_left, hands_visib_right)
 
@@ -216,14 +210,12 @@ class RepetitionCounter(object):
             # 如果我们处于姿势并且正在退出它，则增加计数器并更新状态
             if self._pose_entered and pose_confidence < self._exit_threshold:
 
-                if "HighKnees_left" in pose_classification and pose_classification[
-                    "HighKnees_left"] > self._enter_threshold:
+                if "HighKnees_left" in pose_classification and pose_classification["HighKnees_left"] > self._enter_threshold:
                     self._n_repeats += 1
                     self._pose_entered = False
                     self._finished = False
 
-                if "HighKnees_right" in pose_classification and pose_classification[
-                    "HighKnees_right"] > self._enter_threshold:
+                if "HighKnees_right" in pose_classification and pose_classification["HighKnees_right"] > self._enter_threshold:
                     self._n_repeats += 1
                     self._pose_entered = False
                     self._finished = False
@@ -299,10 +291,6 @@ class RepetitionCounter(object):
                 self._hip_height_array.append(hip_y)
             if len(self._hip_height_array) > self._window_len:
                 self._hip_height_array.pop(0)
-            if hip_y != 0:
-                self._hip_height_array2.append(hip_y)
-            if len(self._hip_height_array2) > self._window_len2:
-                self._hip_height_array2.pop(0)
 
             # 肩膀高度
             shoulder_y = 0
@@ -319,32 +307,31 @@ class RepetitionCounter(object):
 
             mid_index = int((self._window_len - 1) / 2)
             arr = np.array(self._hip_height_array)
-            # 找到最大值的索引
-            max_index = np.argmax(arr)
-            # 找到最小值的索引
-            min_index = np.argmin(arr)
-            if min_index == mid_index:
-                self._pose_highest_entered = True
-                self._pose_lowest_entered = False
-                self._hip_height_highest = self._hip_height_array[mid_index]
-                if (self._hip_height_lowest - self._hip_height_highest > 1 / 8 * self._shoulder_hip_height):
-                    self._n_repeats += 1
-                    # import matplotlib.pyplot as plt
-                    # plt.scatter(np.arange(len(self._hip_height_array2)), (-1) * np.array(self._hip_height_array2))
-                    # import time
-                    # current_time = time.time() * 1000
-                    # plt.savefig(os.path.join('scatter', f'{current_time}.png'))
-                    # plt.clf()
-                self._highest_to_lowest = 0
-                self._lowest_to_highest = 0
-            if max_index == mid_index:
-                self._pose_lowest_entered = True
-                self._pose_highest_entered = False
-                self._hip_height_lowest = self._hip_height_array[mid_index]
+            if len(arr) > 0:
+                # 找到最大值的索引
+                max_index = np.argmax(arr)
+                # 找到最小值的索引
+                min_index = np.argmin(arr)
+                if min_index == mid_index:
+                    self._pose_highest_entered = True
+                    self._pose_lowest_entered = False
+                    self._hip_height_highest = self._hip_height_array[mid_index]
+                    if np.abs(self._hip_height_lowest - self._hip_height_highest) > self._ratio_thres * self._shoulder_hip_height:
+                        self._n_repeats += 1
+                    self._highest_to_lowest = 0
+                    self._lowest_to_highest = 0
+                if max_index == mid_index:
+                    self._pose_lowest_entered = True
+                    self._pose_highest_entered = False
+                    self._hip_height_lowest = self._hip_height_array[mid_index]
 
             self._result['n_repeat'] = self._n_repeats
             self._result['hip_height_array'] = self._hip_height_array
             self._result['pose_highest_entered'] = self._pose_highest_entered
             self._result['pose_lowest_entered'] = self._pose_lowest_entered
+            self._result['pose_lowest_height'] = self._hip_height_lowest
+            self._result['pose_highest_height'] = self._hip_height_highest
+            self._result['jump_height'] = np.abs(self._hip_height_lowest - self._hip_height_highest)
+            self._result['shoulder_hip_height'] = self._shoulder_hip_height
 
         return self._result

@@ -130,6 +130,9 @@ def video_process(video_path, flag):
                 pose_landmarks = np.array([[lmk.x * frame_width, lmk.y * frame_height, lmk.z * frame_width, lmk.visibility]
                                            for lmk in pose_landmarks.landmark], dtype=np.float32)
                 assert pose_landmarks.shape == (33, 4), 'Unexpected landmarks shape: {}'.format(pose_landmarks.shape)
+                # 设置打印选项以抑制科学计数法
+                np.set_printoptions(suppress=True, precision=2)  # precision参数控制小数点后的位数
+                print(pose_landmarks)
 
                 # Classify the pose on the current frame.
                 pose_classification = pose_classifier(pose_landmarks[:, :3])

@@ -1,7 +1,7 @@
 import poseembedding as pe  # 姿态关键点编码模块
 import poseclassifier as pc  # 姿态分类器
 import resultsmooth as rs  # 分类结果平滑
-import counter_csharp  # 动作计数器
+import counter  # 动作计数器
 
 
 def initialize_embedder():
@@ -29,7 +29,7 @@ def initialize_EMA_smoothing(window_size=1, alpha=0.5):
 
 def initialize_counter(flag):
     # 计数+判断动作标准
-    repetition_counter = counter_csharp.RepetitionCounter(flag=flag)
+    repetition_counter = counter.RepetitionCounter(flag=flag)
     return repetition_counter
 
 

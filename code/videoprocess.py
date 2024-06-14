@@ -132,7 +132,7 @@ def video_process(video_path, flag):
                 assert pose_landmarks.shape == (33, 4), 'Unexpected landmarks shape: {}'.format(pose_landmarks.shape)
                 # 设置打印选项以抑制科学计数法
                 np.set_printoptions(suppress=True, precision=2)  # precision参数控制小数点后的位数
-                print(pose_landmarks)
+                # print(pose_landmarks)
 
                 # Classify the pose on the current frame.
                 pose_classification = pose_classifier(pose_landmarks[:, :3])
@@ -176,6 +176,10 @@ def video_process(video_path, flag):
             # import time
             # current_time = time.time() * 1000
             # cv2.imwrite(os.path.join('output', f'{current_time}.jpg'), np.array(output_frame))
+
+            angle_result = str(int(result['shoulder_wrist_angle_left'])) + '_' + str(int(result['shoulder_wrist_angle_right'])) + '_' + str(int(result['shoulder_elbow_wrist_left'])) + '_' + str(
+                int(result['shoulder_elbow_wrist_right']))
+            cv2.imwrite(os.path.join('output', f'{angle_result}.jpg'), np.array(output_frame))
 
     # Close output video.
     out_video.release()

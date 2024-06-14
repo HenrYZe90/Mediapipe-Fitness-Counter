@@ -177,9 +177,9 @@ def video_process(video_path, flag):
             # current_time = time.time() * 1000
             # cv2.imwrite(os.path.join('output', f'{current_time}.jpg'), np.array(output_frame))
 
-            angle_result = str(int(result['shoulder_wrist_angle_left'])) + '_' + str(int(result['shoulder_wrist_angle_right'])) + '_' + str(int(result['shoulder_elbow_wrist_left'])) + '_' + str(
-                int(result['shoulder_elbow_wrist_right']))
-            cv2.imwrite(os.path.join('output', f'{angle_result}.jpg'), np.array(output_frame))
+            # angle_result = str(int(result['shoulder_wrist_angle_left'])) + '_' + str(int(result['shoulder_wrist_angle_right'])) + '_' + str(int(result['shoulder_elbow_wrist_left'])) + '_' + str(
+            #     int(result['shoulder_elbow_wrist_right']))
+            # cv2.imwrite(os.path.join('output', f'{angle_result}.jpg'), np.array(output_frame))
 
     # Close output video.
     out_video.release()

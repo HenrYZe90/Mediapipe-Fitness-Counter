@@ -1,4 +1,5 @@
 import numpy as np
+import time
 
 
 # 动作计数器
@@ -70,6 +71,7 @@ class RepetitionCounter(object):
             self._shoulder_wrist_angle_right = 0
             self._shoulder_elbow_wrist_left = 0
             self._shoulder_elbow_wrist_right = 0
+            self._jump_timestamp = time.time()
             self._result = {'n_repeat': self._n_repeats,
                             'hip_height_array': self._hip_height_array,
                             'pose_highest_entered': self._pose_highest_entered,
@@ -357,39 +359,39 @@ class RepetitionCounter(object):
                 angle_rad = np.arccos(cos_angle)
                 self._shoulder_elbow_wrist_right = np.degrees(angle_rad)
 
-            # 肩膀-手腕与垂线之间的夹角（2D图像中）
-            if left_shoulder[3] > visibility_threshold and left_wrist[3] > visibility_threshold:
-                vector1 = left_shoulder[:2] - left_wrist[:2]
-                vector2 = np.array([0, -1])
-                cos_angle = np.dot(vector1, vector2) / (np.linalg.norm(vector1) * np.linalg.norm(vector2))
-                # 使用arccos计算角度，并将结果转换为度
-                angle_rad = np.arccos(cos_angle)
-                self._shoulder_wrist_angle_left_2d = np.degrees(angle_rad)
-
-            if right_shoulder[3] > visibility_threshold and right_wrist[3] > visibility_threshold:
-                vector1 = right_shoulder[:2] - right_wrist[:2]
-                vector2 = np.array([0, -1])
-                cos_angle = np.dot(vector1, vector2) / (np.linalg.norm(vector1) * np.linalg.norm(vector2))
-                # 使用arccos计算角度，并将结果转换为度
-                angle_rad = np.arccos(cos_angle)
-                self._shoulder_wrist_angle_right_2d = np.degrees(angle_rad)
-
-            # 肩膀-手肘与手肘-手腕之间的夹角（2D图像中）
-            if left_shoulder[3] > visibility_threshold and left_elbow[3] > visibility_threshold and left_wrist[3] > visibility_threshold:
-                vector1 = left_shoulder[:2] - left_elbow[:2]
-                vector2 = left_elbow[:2] - left_wrist[:2]
-                cos_angle = np.dot(vector1, vector2) / (np.linalg.norm(vector1) * np.linalg.norm(vector2))
-                # 使用arccos计算角度，并将结果转换为度
-                angle_rad = np.arccos(cos_angle)
-                self._shoulder_elbow_wrist_left_2d = np.degrees(angle_rad)
-
-            if right_shoulder[3] > visibility_threshold and right_elbow[3] > visibility_threshold and right_wrist[3] > visibility_threshold:
-                vector1 = right_shoulder[:2] - right_elbow[:2]
-                vector2 = right_elbow[:2] - right_wrist[:2]
-                cos_angle = np.dot(vector1, vector2) / (np.linalg.norm(vector1) * np.linalg.norm(vector2))
-                # 使用arccos计算角度，并将结果转换为度
-                angle_rad = np.arccos(cos_angle)
-                self._shoulder_elbow_wrist_right_2d = np.degrees(angle_rad)
+            # # 肩膀-手腕与垂线之间的夹角（2D图像中）
+            # if left_shoulder[3] > visibility_threshold and left_wrist[3] > visibility_threshold:
+            #     vector1 = left_shoulder[:2] - left_wrist[:2]
+            #     vector2 = np.array([0, -1])
+            #     cos_angle = np.dot(vector1, vector2) / (np.linalg.norm(vector1) * np.linalg.norm(vector2))
+            #     # 使用arccos计算角度，并将结果转换为度
+            #     angle_rad = np.arccos(cos_angle)
+            #     self._shoulder_wrist_angle_left_2d = np.degrees(angle_rad)
+            #
+            # if right_shoulder[3] > visibility_threshold and right_wrist[3] > visibility_threshold:
+            #     vector1 = right_shoulder[:2] - right_wrist[:2]
+            #     vector2 = np.array([0, -1])
+            #     cos_angle = np.dot(vector1, vector2) / (np.linalg.norm(vector1) * np.linalg.norm(vector2))
+            #     # 使用arccos计算角度，并将结果转换为度
+            #     angle_rad = np.arccos(cos_angle)
+            #     self._shoulder_wrist_angle_right_2d = np.degrees(angle_rad)
+            #
+            # # 肩膀-手肘与手肘-手腕之间的夹角（2D图像中）
+            # if left_shoulder[3] > visibility_threshold and left_elbow[3] > visibility_threshold and left_wrist[3] > visibility_threshold:
+            #     vector1 = left_shoulder[:2] - left_elbow[:2]
+            #     vector2 = left_elbow[:2] - left_wrist[:2]
+            #     cos_angle = np.dot(vector1, vector2) / (np.linalg.norm(vector1) * np.linalg.norm(vector2))
+            #     # 使用arccos计算角度，并将结果转换为度
+            #     angle_rad = np.arccos(cos_angle)
+            #     self._shoulder_elbow_wrist_left_2d = np.degrees(angle_rad)
+            #
+            # if right_shoulder[3] > visibility_threshold and right_elbow[3] > visibility_threshold and right_wrist[3] > visibility_threshold:
+            #     vector1 = right_shoulder[:2] - right_elbow[:2]
+            #     vector2 = right_elbow[:2] - right_wrist[:2]
+            #     cos_angle = np.dot(vector1, vector2) / (np.linalg.norm(vector1) * np.linalg.norm(vector2))
+            #     # 使用arccos计算角度，并将结果转换为度
+            #     angle_rad = np.arccos(cos_angle)
+            #     self._shoulder_elbow_wrist_right_2d = np.degrees(angle_rad)
 
             mid_index = int((self._window_len - 1) / 2)
             arr = np.array(self._hip_height_array)
@@ -404,6 +406,10 @@ class RepetitionCounter(object):
                     self._hip_height_highest = self._hip_height_array[mid_index]
                     if np.abs(self._hip_height_lowest - self._hip_height_highest) > self._ratio_thres * self._shoulder_hip_height:
                         self._n_repeats += 1
+                        # 如果两次计数之间大于1s，则判断有死绳间断，计数减1
+                        # if self._jump_timestamp != 0 and time.time() - self._jump_timestamp > 1:
+                        #     self._n_repeats -= 1
+                        self._jump_timestamp = time.time()
                     self._highest_to_lowest = 0
                     self._lowest_to_highest = 0
                 if max_index == mid_index:

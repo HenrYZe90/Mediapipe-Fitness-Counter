@@ -66,7 +66,11 @@ class RepetitionCounter(object):
             self._shoulder_hip_height = 0
             self._hip_height_highest = 0
             self._hip_height_lowest = 0
+            self._ankle_height_array = []
+            self._ankle_height_highest = 0
+            self._ankle_height_lowest = 0
             self._ratio_thres = 1 / 8
+            self._foot_ratio_thres = 1 / 20
             self._shoulder_wrist_angle_left = 0
             self._shoulder_wrist_angle_right = 0
             self._shoulder_elbow_wrist_left = 0
@@ -74,12 +78,13 @@ class RepetitionCounter(object):
             self._jump_timestamp = time.time()
             self._result = {'n_repeat': self._n_repeats,
                             'hip_height_array': self._hip_height_array,
+                            'ankle_height_array': self._ankle_height_array,
                             'pose_highest_entered': self._pose_highest_entered,
                             'pose_lowest_entered': self._pose_lowest_entered,
+                            # 'shoulder_elbow_wrist_left': self._shoulder_elbow_wrist_left,
+                            # 'shoulder_elbow_wrist_right': self._shoulder_elbow_wrist_right,
                             'shoulder_wrist_angle_left': self._shoulder_wrist_angle_left,
-                            'shoulder_wrist_angle_right': self._shoulder_wrist_angle_right,
-                            'shoulder_elbow_wrist_left': self._shoulder_elbow_wrist_left,
-                            'shoulder_elbow_wrist_right': self._shoulder_elbow_wrist_right}
+                            'shoulder_wrist_angle_right': self._shoulder_wrist_angle_right}
 
     @property
     def n_repeats(self):
@@ -286,11 +291,11 @@ class RepetitionCounter(object):
 
         elif self._flag == 3:  # 跳绳
 
+            visibility_threshold = 0.8  # 可见度阈值
             # 胯部的高度
             left_hip = pose_landmarks[24]
             right_hip = pose_landmarks[23]
             hip_y = 0
-            visibility_threshold = 0.8  # 可见度阈值
             if left_hip[3] > visibility_threshold and right_hip[3] > visibility_threshold:
                 hip_y = (left_hip[1] + right_hip[1]) / 2
             elif left_hip[3] > visibility_threshold:
@@ -315,15 +320,26 @@ class RepetitionCounter(object):
             if hip_y != 0 and shoulder_y != 0:
                 self._shoulder_hip_height = hip_y - shoulder_y
 
+            # 脚踝的高度
+            left_ankle = pose_landmarks[28]
+            right_ankle = pose_landmarks[27]
+            ankle_y = 0
+            if left_ankle[3] > visibility_threshold and right_ankle[3] > visibility_threshold:
+                ankle_y = (left_ankle[1] + right_ankle[1]) / 2
+            elif left_ankle[3] > visibility_threshold:
+                ankle_y = left_ankle[1]
+            elif right_ankle[3] > visibility_threshold:
+                ankle_y = right_ankle[1]
+            if ankle_y != 0:
+                self._ankle_height_array.append(ankle_y)
+            if len(self._ankle_height_array) > self._window_len:
+                self._ankle_height_array.pop(0)
+
             # 手臂的角度
-            left_elbow = pose_landmarks[14]
-            right_elbow = pose_landmarks[13]
             left_wrist = pose_landmarks[16]
             right_wrist = pose_landmarks[15]
             self._shoulder_wrist_angle_left = 0
             self._shoulder_wrist_angle_right = 0
-            self._shoulder_elbow_wrist_left = 0
-            self._shoulder_elbow_wrist_right = 0
 
             # 肩膀-手腕与垂线之间的夹角（3D空间中）
             if left_shoulder[3] > visibility_threshold and left_wrist[3] > visibility_threshold:
@@ -342,22 +358,26 @@ class RepetitionCounter(object):
                 angle_rad = np.arccos(cos_angle)
                 self._shoulder_wrist_angle_right = np.degrees(angle_rad)
 
-            # 肩膀-手肘与手肘-手腕之间的夹角（3D空间中）
-            if left_shoulder[3] > visibility_threshold and left_elbow[3] > visibility_threshold and left_wrist[3] > visibility_threshold:
-                vector1 = left_shoulder[:3] - left_elbow[:3]
-                vector2 = left_elbow[:3] - left_wrist[:3]
-                cos_angle = np.dot(vector1, vector2) / (np.linalg.norm(vector1) * np.linalg.norm(vector2))
-                # 使用arccos计算角度，并将结果转换为度
-                angle_rad = np.arccos(cos_angle)
-                self._shoulder_elbow_wrist_left = np.degrees(angle_rad)
-
-            if right_shoulder[3] > visibility_threshold and right_elbow[3] > visibility_threshold and right_wrist[3] > visibility_threshold:
-                vector1 = right_shoulder[:3] - right_elbow[:3]
-                vector2 = right_elbow[:3] - right_wrist[:3]
-                cos_angle = np.dot(vector1, vector2) / (np.linalg.norm(vector1) * np.linalg.norm(vector2))
-                # 使用arccos计算角度，并将结果转换为度
-                angle_rad = np.arccos(cos_angle)
-                self._shoulder_elbow_wrist_right = np.degrees(angle_rad)
+            # left_elbow = pose_landmarks[14]
+            # right_elbow = pose_landmarks[13]
+            # self._shoulder_elbow_wrist_left = 0
+            # self._shoulder_elbow_wrist_right = 0
+            # # 肩膀-手肘与手肘-手腕之间的夹角（3D空间中）
+            # if left_shoulder[3] > visibility_threshold and left_elbow[3] > visibility_threshold and left_wrist[3] > visibility_threshold:
+            #     vector1 = left_shoulder[:3] - left_elbow[:3]
+            #     vector2 = left_elbow[:3] - left_wrist[:3]
+            #     cos_angle = np.dot(vector1, vector2) / (np.linalg.norm(vector1) * np.linalg.norm(vector2))
+            #     # 使用arccos计算角度，并将结果转换为度
+            #     angle_rad = np.arccos(cos_angle)
+            #     self._shoulder_elbow_wrist_left = np.degrees(angle_rad)
+            #
+            # if right_shoulder[3] > visibility_threshold and right_elbow[3] > visibility_threshold and right_wrist[3] > visibility_threshold:
+            #     vector1 = right_shoulder[:3] - right_elbow[:3]
+            #     vector2 = right_elbow[:3] - right_wrist[:3]
+            #     cos_angle = np.dot(vector1, vector2) / (np.linalg.norm(vector1) * np.linalg.norm(vector2))
+            #     # 使用arccos计算角度，并将结果转换为度
+            #     angle_rad = np.arccos(cos_angle)
+            #     self._shoulder_elbow_wrist_right = np.degrees(angle_rad)
 
             # # 肩膀-手腕与垂线之间的夹角（2D图像中）
             # if left_shoulder[3] > visibility_threshold and left_wrist[3] > visibility_threshold:
@@ -404,7 +424,10 @@ class RepetitionCounter(object):
                     self._pose_highest_entered = True
                     self._pose_lowest_entered = False
                     self._hip_height_highest = self._hip_height_array[mid_index]
-                    if np.abs(self._hip_height_lowest - self._hip_height_highest) > self._ratio_thres * self._shoulder_hip_height:
+                    if len(self._ankle_height_array) == self._window_len:
+                        self._ankle_height_highest = self._ankle_height_array[mid_index]
+                    if (self._hip_height_lowest - self._hip_height_highest > self._ratio_thres * self._shoulder_hip_height and
+                            self._ankle_height_lowest - self._ankle_height_highest > self._foot_ratio_thres * self._shoulder_hip_height):
                         self._n_repeats += 1
                         # 如果两次计数之间大于1s，则判断有死绳间断，计数减1
                         # if self._jump_timestamp != 0 and time.time() - self._jump_timestamp > 1:
@@ -416,18 +439,21 @@ class RepetitionCounter(object):
                     self._pose_lowest_entered = True
                     self._pose_highest_entered = False
                     self._hip_height_lowest = self._hip_height_array[mid_index]
+                    if len(self._ankle_height_array) == self._window_len:
+                        self._ankle_height_lowest = self._ankle_height_array[mid_index]
 
             self._result['n_repeat'] = self._n_repeats
             self._result['hip_height_array'] = self._hip_height_array
             self._result['pose_highest_entered'] = self._pose_highest_entered
             self._result['pose_lowest_entered'] = self._pose_lowest_entered
-            self._result['pose_lowest_height'] = self._hip_height_lowest
-            self._result['pose_highest_height'] = self._hip_height_highest
+            self._result['hip_height_lowest'] = self._hip_height_lowest
+            self._result['hip_height_highest'] = self._hip_height_highest
             self._result['jump_height'] = np.abs(self._hip_height_lowest - self._hip_height_highest)
             self._result['shoulder_hip_height'] = self._shoulder_hip_height
             self._result['shoulder_wrist_angle_left'] = self._shoulder_wrist_angle_left
             self._result['shoulder_wrist_angle_right'] = self._shoulder_wrist_angle_right
-            self._result['shoulder_elbow_wrist_left'] = self._shoulder_elbow_wrist_left
-            self._result['shoulder_elbow_wrist_right'] = self._shoulder_elbow_wrist_right
+            # self._result['shoulder_elbow_wrist_left'] = self._shoulder_elbow_wrist_left
+            # self._result['shoulder_elbow_wrist_right'] = self._shoulder_elbow_wrist_right
+            self._result['ankle_height_array'] = self._ankle_height_array
 
         return self._result

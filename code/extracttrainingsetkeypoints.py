@@ -1,3 +1,4 @@
+# 提取运动动作的关键点
 import os
 import sys
 import csv

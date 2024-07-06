@@ -1,7 +1,7 @@
+# 从运动图片转换为保存在csv中的关键点特征列表
 import poseembedding as pe  # 姿态关键点编码模块
 import poseclassifier as pc  # 姿态分类器
 import extracttrainingsetkeypoints as ek  # 提取训练集关键点特征
-import csv
 import os
 
 
@@ -21,18 +21,17 @@ import os
 def trainset_process(flag):
     # 如果fitness_poses_csvs_out文件夹下的PushUp_up.csv和PushUp_down.csv已经存在，则不用导入样本图片再训练了
     if flag == 1:
-        if os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/PushUp_up.csv')) and \
-                os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/PushUp_down.csv')):
+        if os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/PushUp/PushUp_up.csv')) and \
+                os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/PushUp/PushUp_down.csv')):
             return
     elif flag == 2:
-        if os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/HighKnees_prepare.csv')) and \
-                os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/HighKnees_left.csv')) and \
-                os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/HighKnees_right.csv')):
+        if os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/HighKnees/HighKnees_prepare.csv')) and \
+                os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/HighKnees/HighKnees_left.csv')) and \
+                os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/HighKnees/HighKnees_right.csv')):
             return
-
     elif flag == 3:
-        if os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/SkippingRope_highest.csv')) and \
-                os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/SkippingRope_lowest.csv')):
+        if os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/SkippingRope/SkippingRope_highest.csv')) and \
+                os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/SkippingRope/SkippingRope_lowest.csv')):
             return
 
     # 指定样本图片的路径
@@ -40,7 +39,14 @@ def trainset_process(flag):
 
     # Output folders for bootstrapped images and CSVs.
     bootstrap_images_out_folder = 'fitness_poses_images_out'
-    bootstrap_csvs_out_folder = 'fitness_poses_csvs_out'
+    # bootstrap_csvs_out_folder = 'fitness_poses_csvs_out'
+
+    if flag == 1:
+        bootstrap_csvs_out_folder = 'fitness_poses_images_out/PushUp.csv'
+    elif flag == 2:
+        bootstrap_csvs_out_folder = 'fitness_poses_images_out/HighKnees.csv'
+    elif flag == 3:
+        bootstrap_csvs_out_folder = 'fitness_poses_images_out/SkippingRope.csv'
 
     # Initialize helper.
     bootstrap_helper = ek.BootstrapHelper(

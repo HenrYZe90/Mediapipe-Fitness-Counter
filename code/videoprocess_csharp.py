@@ -9,7 +9,7 @@ from mediapipe.python.solutions import pose as mp_pose
 import poseembedding as pe  # 姿态关键点编码模块
 import poseclassifier as pc  # 姿态分类器
 import resultsmooth as rs  # 分类结果平滑
-import counter_csharp  # 动作计数器
+import counter  # 动作计数器
 import visualizer as vs  # 可视化模块
 from PIL import ImageDraw, ImageFont
 import time
@@ -34,9 +34,15 @@ def video_process(video_path, flag):
     if flag == 1:
         class_name = 'DeepSquat_down'
         out_video_path = './video-output/' + class_name.split('_')[0] + ' ' + mkfile_time + '.mp4'
+        pose_samples_folder = './fitness_poses_csvs_out/DeepSquat'
     elif flag == 2:
         class_name = 'HighKnees_prepare'
         out_video_path = './video-output/' + class_name.split('_')[0] + ' ' + mkfile_time + '.mp4'
+        pose_samples_folder = './fitness_poses_csvs_out/HighKnees'
+    elif flag == 3:
+        class_name = 'SkippingRope_lowest'
+        out_video_path = './video-output/' + class_name.split('_')[0] + ' ' + mkfile_time + '.mp4'
+        pose_samples_folder = './fitness_poses_csvs_out/SkippingRope'
 
     # 配置logging模块
     logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s:%(levelname)s:%(message)s')
@@ -55,7 +61,7 @@ def video_process(video_path, flag):
     # Do that before every video as all of them have state.
 
     # Folder with pose class CSVs. That should be the same folder you using while building classifier to output CSVs.
-    pose_samples_folder = 'fitness_poses_csvs_out'
+    # pose_samples_folder = 'fitness_poses_csvs_out'
 
     # Initialize tracker.
     pose_tracker = mp_pose.Pose()
@@ -86,7 +92,7 @@ def video_process(video_path, flag):
 
         start_time = time.time()
         # Initialize counter.
-        repetition_counter = counter_csharp.RepetitionCounter(
+        repetition_counter = counter.RepetitionCounter(
             flag=flag,
             class_name=class_name,
             prev_result=counter_result)

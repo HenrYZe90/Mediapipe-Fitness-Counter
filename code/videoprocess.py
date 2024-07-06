@@ -32,12 +32,15 @@ def video_process(video_path, flag):
     if flag == 1:
         class_name = 'DeepSquat_down'
         out_video_path = './video-output/' + class_name.split('_')[0] + ' ' + mkfile_time + '.mp4'
+        pose_samples_folder = './fitness_poses_csvs_out/DeepSquat'
     elif flag == 2:
         class_name = 'HighKnees_prepare'
         out_video_path = './video-output/' + class_name.split('_')[0] + ' ' + mkfile_time + '.mp4'
+        pose_samples_folder = './fitness_poses_csvs_out/HighKnees'
     elif flag == 3:
         class_name = 'SkippingRope_lowest'
         out_video_path = './video-output/' + class_name.split('_')[0] + ' ' + mkfile_time + '.mp4'
+        pose_samples_folder = './fitness_poses_csvs_out/SkippingRope'
 
     # Open the video.
     video_cap = cv2.VideoCapture(video_path)
@@ -52,7 +55,7 @@ def video_process(video_path, flag):
     # Do that before every video as all of them have state.
 
     # Folder with pose class CSVs. That should be the same folder you using while building classifier to output CSVs.
-    pose_samples_folder = 'fitness_poses_csvs_out'
+    # pose_samples_folder = 'fitness_poses_csvs_out'
 
     # Initialize tracker.
     pose_tracker = mp_pose.Pose()
@@ -144,7 +147,7 @@ def video_process(video_path, flag):
 
                 # Count repetitions.
                 result = repetition_counter(pose_classification_filtered, pose_landmarks)
-                # print(result)
+                print(result)
                 # repetitions_count = result['n_repeat']
                 repetitions_count = repetition_counter.n_repeats
 

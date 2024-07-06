@@ -137,12 +137,10 @@ class FullBodyPoseEmbedder(object):
             self._get_distance_by_names(landmarks, 'left_hip', 'left_ankle'),
             self._get_distance_by_names(landmarks, 'right_hip', 'right_ankle'),
 
-            # Four joints.
+            # Three joints.
 
             self._get_distance_by_names(landmarks, 'left_hip', 'left_wrist'),
             self._get_distance_by_names(landmarks, 'right_hip', 'right_wrist'),
-
-            # Five joints.
 
             self._get_distance_by_names(landmarks, 'left_shoulder', 'left_ankle'),
             self._get_distance_by_names(landmarks, 'right_shoulder', 'right_ankle'),

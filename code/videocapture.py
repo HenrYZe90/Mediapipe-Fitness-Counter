@@ -32,10 +32,13 @@ def process(flag):
     # out_video_path = 'squat-sample-out.mp4'
     if flag == 1:
         class_name = 'DeepSquat_down'
+        pose_samples_folder = './fitness_poses_csvs_out/DeepSquat'
     elif flag == 2:
         class_name = 'HighKnees_prepare'
+        pose_samples_folder = './fitness_poses_csvs_out/HighKnees'
     elif flag == 3:
         class_name = 'SkippingRope_lowest'
+        pose_samples_folder = './fitness_poses_csvs_out/SkippingRope'
     cv2.namedWindow('video', cv2.WINDOW_NORMAL)
     video_cap = cv2.VideoCapture(0)
 
@@ -48,9 +51,8 @@ def process(flag):
     # Initialize tracker, classifier and counter.
     # Do that before every video as all of them have state.
 
-    # Folder with pose class CSVs. That should be the same folder you using while
-    # building classifier to output CSVs.
-    pose_samples_folder = 'fitness_poses_csvs_out'
+    # Folder with pose class CSVs. That should be the same folder you using while building classifier to output CSVs.
+    # pose_samples_folder = 'fitness_poses_csvs_out'
 
     # 初始化，准备工作只做一次
     # Initialize tracker.

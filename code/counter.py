@@ -86,6 +86,28 @@ class RepetitionCounter(object):
                             'shoulder_wrist_angle_left': self._shoulder_wrist_angle_left,
                             'shoulder_wrist_angle_right': self._shoulder_wrist_angle_right}
 
+        elif flag == 4:  # 俯卧撑
+            self._flag = flag
+            # 如果姿势通过了给定的阈值，那么我们就进入该动作的计数
+            self._enter_threshold = enter_threshold
+            self._exit_threshold = exit_threshold
+            # 退出姿势的次数
+            self._n_repeats = 0
+            # 是否处于准备姿势
+            self._pose_entered = False
+            self._result = {'n_repeat': self._n_repeats}
+
+        elif flag == 5:  # 仰卧起坐
+            self._flag = flag
+            # 如果姿势通过了给定的阈值，那么我们就进入该动作的计数
+            self._enter_threshold = enter_threshold
+            self._exit_threshold = exit_threshold
+            # 退出姿势的次数
+            self._n_repeats = 0
+            # 是否处于准备姿势
+            self._pose_entered = False
+            self._result = {'n_repeat': self._n_repeats}
+
     @property
     def n_repeats(self):
         return self._n_repeats
@@ -455,5 +477,48 @@ class RepetitionCounter(object):
             # self._result['shoulder_elbow_wrist_left'] = self._shoulder_elbow_wrist_left
             # self._result['shoulder_elbow_wrist_right'] = self._shoulder_elbow_wrist_right
             self._result['ankle_height_array'] = self._ankle_height_array
+
+        elif self._flag == 4:  # 俯卧撑
+
+            # 获取姿势的置信度.
+            pose_confidence = 0.0
+            if 'PushUp_down' in pose_classification:
+                pose_confidence = pose_classification['PushUp_down']
+
+            # On the very first frame or if we were out of the pose, just check if we
+            # entered it on this frame and update the state.
+            # 在第一帧或者如果我们不处于姿势中，只需检查我们是否在这一帧上进入该姿势并更新状态
+            if not self._pose_entered:
+                self._pose_entered = pose_confidence > self._enter_threshold
+
+            # 如果我们处于姿势并且正在退出它，则增加计数器并更新状态
+            if self._pose_entered and pose_confidence < self._exit_threshold:
+                if "PushUp_up" in pose_classification and pose_classification["PushUp_up"] > self._enter_threshold:
+                    self._n_repeats += 1
+                    self._pose_entered = False
+                    self._finished = False
+                    self._result['n_repeat'] = self._n_repeats
+
+        elif self._flag == 5:  # 仰卧起坐
+
+            # 获取姿势的置信度.
+            pose_confidence = 0.0
+            if 'SitUp_down' in pose_classification:
+                pose_confidence = pose_classification['SitUp_down']
+
+            # On the very first frame or if we were out of the pose, just check if we
+            # entered it on this frame and update the state.
+            # 在第一帧或者如果我们不处于姿势中，只需检查我们是否在这一帧上进入该姿势并更新状态
+            if not self._pose_entered:
+                self._pose_entered = pose_confidence > self._enter_threshold
+
+            # 如果我们处于姿势并且正在退出它，则增加计数器并更新状态
+            if self._pose_entered and pose_confidence < self._exit_threshold:
+                if "SitUp_up" in pose_classification and pose_classification["SitUp_up"] > self._enter_threshold:
+                    self._n_repeats += 1
+                    self._pose_entered = False
+                    self._finished = False
+                    self._result['n_repeat'] = self._n_repeats
+
 
         return self._result

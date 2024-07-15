@@ -37,7 +37,8 @@ def extract_frames(video_path, output_folder, filename):
 
 
 if __name__ == '__main__':
-    video_path = './运动视频'  # 替换为你的视频文件路径
-    filename = 'SkippingRope05.mp4'
-    output_folder = 'frames'  # 输出文件夹名，将在这个文件夹下保存每一帧
-    extract_frames(os.path.join(video_path, filename), output_folder, filename.split('.')[0])
+    video_path = r'.\video-sample\situp'
+    filenames = os.listdir(video_path)
+    for filename in filenames:
+        output_folder = 'frames'  # 输出文件夹名，将在这个文件夹下保存每一帧
+        extract_frames(os.path.join(video_path, filename), output_folder, filename.split('.')[0])

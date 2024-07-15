@@ -17,6 +17,11 @@ def initialize_classifier(flag, pose_embedder):
         pose_samples_folder = './fitness_poses_csvs_out/HighKnees'
     elif flag == 3:
         pose_samples_folder = './fitness_poses_csvs_out/SkippingRope'
+    elif flag == 4:
+        pose_samples_folder = './fitness_poses_csvs_out/PushUp'
+    elif flag == 5:
+        pose_samples_folder = './fitness_poses_csvs_out/SitUp'
+
     # Check that you are using the same parameters as during bootstrapping.
     # 动作分类 动作A:2, 动作B:8 ...
     pose_classifier = pc.PoseClassifier(

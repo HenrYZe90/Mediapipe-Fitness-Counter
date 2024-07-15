@@ -3,6 +3,7 @@ import poseembedding as pe  # 姿态关键点编码模块
 import poseclassifier as pc  # 姿态分类器
 import extracttrainingsetkeypoints as ek  # 提取训练集关键点特征
 import os
+import csv
 
 
 # Required structure of the images_in_folder:
@@ -21,8 +22,8 @@ import os
 def trainset_process(flag):
     # 如果fitness_poses_csvs_out文件夹下的PushUp_up.csv和PushUp_down.csv已经存在，则不用导入样本图片再训练了
     if flag == 1:
-        if os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/PushUp/PushUp_up.csv')) and \
-                os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/PushUp/PushUp_down.csv')):
+        if os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/DeepSquat/DeepSquat_down.csv')) and \
+                os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/DeepSquat/DeepSquat_up.csv')):
             return
     elif flag == 2:
         if os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/HighKnees/HighKnees_prepare.csv')) and \
@@ -33,20 +34,38 @@ def trainset_process(flag):
         if os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/SkippingRope/SkippingRope_highest.csv')) and \
                 os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/SkippingRope/SkippingRope_lowest.csv')):
             return
+    elif flag == 4:
+        if os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/PushUp/PushUp_down.csv')) and \
+                os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/PushUp/PushUp_up.csv')):
+            return
+    elif flag == 5:
+        if os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/SitUp/SitUp_down.csv')) and \
+                os.path.isfile(os.path.join(os.path.dirname(__file__), 'fitness_poses_csvs_out/SitUp/SitUp_up.csv')):
+            return
 
     # 指定样本图片的路径
     bootstrap_images_in_folder = 'fitness_poses_images_in'
 
     # Output folders for bootstrapped images and CSVs.
     bootstrap_images_out_folder = 'fitness_poses_images_out'
-    # bootstrap_csvs_out_folder = 'fitness_poses_csvs_out'
+    bootstrap_csvs_out_folder = 'fitness_poses_csvs_out'
 
     if flag == 1:
-        bootstrap_csvs_out_folder = 'fitness_poses_images_out/PushUp.csv'
+        bootstrap_csvs_out_folder = 'fitness_poses_csvs_out/DeepSquat'
     elif flag == 2:
-        bootstrap_csvs_out_folder = 'fitness_poses_images_out/HighKnees.csv'
+        bootstrap_images_in_folder = 'fitness_poses_images_in/HighKnees'
+        bootstrap_images_out_folder = 'fitness_poses_images_out/HighKnees'
+        bootstrap_csvs_out_folder = 'fitness_poses_csvs_out/HighKnees'
     elif flag == 3:
-        bootstrap_csvs_out_folder = 'fitness_poses_images_out/SkippingRope.csv'
+        bootstrap_images_in_folder = 'fitness_poses_images_in/SkippingRope'
+        bootstrap_images_out_folder = 'fitness_poses_images_out/SkippingRope'
+        bootstrap_csvs_out_folder = 'fitness_poses_csvs_out/SkippingRope'
+    elif flag == 4:
+        bootstrap_csvs_out_folder = 'fitness_poses_csvs_out/PushUp'
+    elif flag == 5:
+        bootstrap_images_in_folder = 'fitness_poses_images_in/SitUp'
+        bootstrap_images_out_folder = 'fitness_poses_images_out/SitUp'
+        bootstrap_csvs_out_folder = 'fitness_poses_csvs_out/SitUp'
 
     # Initialize helper.
     bootstrap_helper = ek.BootstrapHelper(
@@ -138,9 +157,9 @@ def trainset_process(flag):
 #                 for row in csv_in_reader:
 #                     row.insert(1, class_name)
 #                     csv_out_writer.writerow(row)
-
+#
 # dump_for_the_app()
 
 if __name__ == '__main__':
-    flag = 3
+    flag = 5
     trainset_process(flag)  # 训练新的图片/动作/姿态

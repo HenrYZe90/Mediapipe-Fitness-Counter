@@ -41,6 +41,14 @@ def video_process(video_path, flag):
         class_name = 'SkippingRope_lowest'
         out_video_path = './video-output/' + class_name.split('_')[0] + ' ' + mkfile_time + '.mp4'
         pose_samples_folder = './fitness_poses_csvs_out/SkippingRope'
+    elif flag == 4:
+        class_name = 'PushUp_down'
+        out_video_path = './video-output/' + class_name.split('_')[0] + ' ' + mkfile_time + '.mp4'
+        pose_samples_folder = './fitness_poses_csvs_out/PushUp'
+    elif flag == 5:
+        class_name = 'SitUp_down'
+        out_video_path = './video-output/' + class_name.split('_')[0] + ' ' + mkfile_time + '.mp4'
+        pose_samples_folder = './fitness_poses_csvs_out/SitUp'
 
     # Open the video.
     video_cap = cv2.VideoCapture(video_path)
@@ -143,7 +151,7 @@ def video_process(video_path, flag):
 
                 # Smooth classification using EMA.
                 pose_classification_filtered = pose_classification_filter(pose_classification)
-                # print(datetime.datetime.now(), pose_classification_filtered)
+                print(datetime.datetime.now(), pose_classification_filtered)
 
                 # Count repetitions.
                 result = repetition_counter(pose_classification_filtered, pose_landmarks)
